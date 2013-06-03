@@ -6,7 +6,7 @@
 (function( window ) {
 
 	/*
-	需要滚动的元素最后不要用id属性，因为循环滚动会clone相应的滚动元素，
+	需要滚动的元素最好不要有id属性，因为循环滚动会clone相应的滚动元素，
 	如果有id会造成id重复
 	*/
 
@@ -73,6 +73,7 @@
 		this._delay = options.delay || 0;
 		this._rollPixel = options.rollPixel || ( this._delay == 0 ? this._container.clientHeight : 1 );
 		this._direction = options.direction || "up";
+		this._callback = util.bind( this._delay == 0 ? noop : ( options.callback || noop ), this );
 
 		//间隔播放的时候判断是否要暂停播放的标志
 		this._isStopLoop = false;
@@ -129,7 +130,7 @@
 			this._timerId = setInterval( marquee, this._speed );
 		}
 		else {
-			setTimeout( rollPlay, this._delay );
+			this._timerId = setTimeout( rollPlay, this._delay );
 		}
 		
 		util.addEvent( this._container, "mouseover", util.bind( function() {
@@ -138,6 +139,7 @@
 			}
 			else {
 				this._isStopLoop = true;
+				clearTimeout( this._timerId );
 			}
 		}, this ) );
 
@@ -147,7 +149,7 @@
 			}
 			else {
 				this._isStopLoop = false;
-				setTimeout( rollPlay, this._delay );
+				this._timerId = setTimeout( rollPlay, this._delay );
 			}
 		}, this ) );
 	}
@@ -193,8 +195,9 @@
 
 	LoopRoll.prototype._rollPlay = function() {
 		var end = util.bind( function() {
+			this._callback();
 			if( !this._isStopLoop ) {
-				setTimeout( util.bind( this._rollPlay, this ), this._delay );
+				this._timerId = setTimeout( util.bind( this._rollPlay, this ), this._delay );
 			}
 		}, this );
 
