@@ -6,7 +6,7 @@ LoopRoll
 
 #使用
 	var loop = new LoopRoll( options );
-或者
+或者  
 
     var loop = LoopRoll( options );
 
@@ -25,5 +25,17 @@ LoopRoll
 		callback     : 可选，Function类型，delay == 0会忽略此参数，delay != 0 表示每次移动完一组元素之后会调用此函数
 	}
 
+#说明
+要让元素滚动，外层的container必须要设置以下的css属性：
+
+    overflow: hidden; width:; height:; position:relative; 
+
+滚动的元素需要设置的css属性:
+
+	position: absolute
+
+position不一定是要为上面两种形式，只要滚动元素的定位是相对于container定位就行，因为滚动的时候需要用到top，left属性移动元素，
+默认都是从 top:0px 或者 left:0px 开始滚动。
+
 #例子
-请查看项目文件中src/LoopRoll.html文件
+请查看项目文件中 src/LoopRoll.html 文件。
