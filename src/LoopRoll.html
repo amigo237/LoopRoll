@@ -54,17 +54,18 @@
 		container: document.getElementById("container"),
 		rollElement: document.getElementById("rollElement"),
 		speed: 50,
-		rollPixel: 2,
+		rollPixel: 1,
 		delay: 0,
-		direction: "down"
+		direction: "down",
+		callback: function(){}
 	});
 
 	
 	LoopRoll({
 		container: document.getElementById("container1"),
 		rollElement: document.getElementById("rollElement1"),
-		speed: 1000,
-		rollPixel: 200,
+		speed: 5000,
+		rollPixel: 0,
 		delay: 2000,
 		direction: "right",
 		callback: function(){}

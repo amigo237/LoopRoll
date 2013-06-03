@@ -18,6 +18,7 @@
 		|| function(callback) { setTimeout(callback, 1000 / 60); };
 
 	var noop = function(){};
+	var DIRECTION = ["up" , "down", "left", "right"];
 
 	if( !Array.prototype.indexOf ) {
 		Array.prototype.indexOf = function( value ) {
@@ -71,8 +72,8 @@
 		this._rollElement = options.rollElement;
 		this._speed = options.speed || 100;
 		this._delay = options.delay || 0;
-		this._rollPixel = options.rollPixel || ( this._delay == 0 ? this._container.clientHeight : 1 );
-		this._direction = options.direction || "up";
+		this._direction = DIRECTION.indexOf( options.direction ) != -1 ? options.direction : "up";
+		this._rollPixel = options.rollPixel || ( this._delay != 0 ? ( this.getRollType() == "H" ? this._container.clientWidth : this._container.clientHeight ) : 1 );
 		this._callback = util.bind( this._delay == 0 ? noop : ( options.callback || noop ), this );
 
 		//间隔播放的时候判断是否要暂停播放的标志
@@ -109,21 +110,27 @@
 		this._container.style.overflow = "hidden";
 		this._container.appendChild( this._rollElementClone );
 
-		if( this._direction == "up" ) {
+		if( ["up", "down"].indexOf( this._direction ) != -1 ) {
 			this._rollElement.style.top = "0px";
 			this._rollElementClone.style.top = this._rollElement.offsetHeight + "px";
 		}
-		else if ( this._direction == "down" ) {
-			this._rollElement.style.top = "0px";
-			this._rollElementClone.style.top = -this._rollElement.offsetHeight + "px";
-		}
-		else if( this._direction == "left" ) {
+
+		if( ["left", "right"].indexOf(this._direction) != -1 ) {
 			this._rollElement.style.left = "0px";
 			this._rollElementClone.style.left = this._rollElement.offsetWidth + "px";
 		}
+		
+		if( this._direction == "up" ) {
+			this._container.scrollTop = 0;
+		}
+		else if ( this._direction == "down" ) {
+			this._container.scrollTop = this._rollElement.offsetHeight;
+		}
+		else if( this._direction == "left" ) {
+			this._container.scrollLeft = 0;
+		}
 		else if( this._direction == "right" ) {
-			this._rollElement.style.left = "0px";
-			this._rollElementClone.style.left = -this._rollElement.offsetWidth + "px";
+			this._container.scrollLeft = this._rollElement.offsetWidth;
 		}
 		
 		if( this._delay == 0 ) {
@@ -156,39 +163,39 @@
 
 	LoopRoll.prototype._marquee = function() {
 		if( this._direction == "up" ) {
-			if( this._rollElement.offsetHeight - this._container.scrollTop <= 0 ) {
-				this._container.scrollTop -= this._rollElement.offsetHeight;
+			var scrollEnd = this._container.scrollTop + this._rollPixel;
+			if( scrollEnd >= this._rollElement.offsetHeight ) {
+				this._container.scrollTop = scrollEnd - this._rollElement.offsetHeight;
 			}
 			else {
-				this._container.scrollTop += this._rollPixel;
+				this._container.scrollTop = scrollEnd;
 			}
 		}
 		else if ( this._direction == "down" ) {
-			this._rollElement.style.top = util.css( this._rollElement, "top" ) + this._rollPixel + "px";
-			this._rollElementClone.style.top = util.css( this._rollElementClone, "top" ) + this._rollPixel + "px";
-			if( util.css( this._rollElement, "top" ) == 0 ) {
-				this._rollElementClone.style.top = -this._rollElement.offsetHeight + "px";
+			var scrollEnd = this._container.scrollTop - this._rollPixel;
+			if( scrollEnd <= 0 ) {
+				this._container.scrollTop = scrollEnd + this._rollElement.offsetHeight;
 			}
-			if( util.css( this._rollElementClone, "top" ) == 0 ) {
-				this._rollElement.style.top = -this._rollElement.offsetHeight + "px";
+			else {
+				this._container.scrollTop = scrollEnd;
 			}
 		}
 		else if( this._direction == "left" ) {
-			if( this._rollElement.offsetWidth - this._container.scrollLeft <= 0 ) {
-				this._container.scrollLeft -= this._rollElement.offsetWidth;
+			var scrollEnd = this._container.scrollLeft + this._rollPixel;
+			if( scrollEnd >= this._rollElement.offsetWidth ) {
+				this._container.scrollLeft = scrollEnd - this._rollElement.offsetWidth;
 			}
 			else {
-				this._container.scrollLeft += this._rollPixel;
+				this._container.scrollLeft = scrollEnd;
 			}
 		}
 		else if ( this._direction == "right" ) {
-			this._rollElement.style.left = util.css( this._rollElement, "left" ) + this._rollPixel + "px";
-			this._rollElementClone.style.left = util.css( this._rollElementClone, "left" ) + this._rollPixel + "px";
-			if( util.css( this._rollElement, "left" ) == 0 ) {
-				this._rollElementClone.style.left = -this._rollElement.offsetWidth + "px";
+			var scrollEnd = this._container.scrollLeft - this._rollPixel;
+			if( scrollEnd <= 0 ) {
+				this._container.scrollLeft = scrollEnd + this._rollElement.offsetWidth;
 			}
-			if( util.css( this._rollElementClone, "left" ) == 0 ) {
-				this._rollElement.style.left = -this._rollElement.offsetWidth + "px";
+			else {
+				this._container.scrollLeft = scrollEnd;
 			}
 		}
 	}
@@ -210,26 +217,10 @@
 			animate( run, end, this._speed );
 		}
 		else if( this._direction == "down" ) {
-			var rollElementTop = util.css( this._rollElement, "top" );
-			var rollElementCloneTop = util.css( this._rollElementClone, "top" );
-			var distance = this._rollPixel;
-			var viewPortHeight = this._container.clientHeight;
-
-			if( rollElementTop >= viewPortHeight ) {
-				this._rollElement.style.top = -this._rollElement.offsetHeight + rollElementCloneTop + "px";
-			}
-
-			if( rollElementCloneTop >= viewPortHeight ) {
-				this._rollElementClone.style.top = -this._rollElement.offsetHeight + util.css( this._rollElement, "top" ) + "px";
-			}
-			
-			rollElementTop = util.css( this._rollElement, "top" );
-			rollElementCloneTop = util.css( this._rollElementClone, "top" );
-
+			var top = this._container.scrollTop;
 			var run = util.bind( function (progress) {
-				var stepDistance = parseInt( distance * progress, 10 );
-				this._rollElement.style.top = rollElementTop + stepDistance + "px";
-				this._rollElementClone.style.top = rollElementCloneTop + stepDistance + "px";
+				var scrollEnd = ( top - parseInt( progress * this._rollPixel , 10 ) ) % this._rollElement.offsetHeight;
+				this._container.scrollTop = scrollEnd <= 0 ? scrollEnd + this._rollElement.offsetHeight : scrollEnd;
 			}, this);
 
 			animate( run, end, this._speed );
@@ -243,29 +234,35 @@
 			animate( run, end, this._speed );
 		}
 		else if( this._direction == "right" ) {
-			var rollElementLeft = util.css( this._rollElement, "left" );
-			var rollElementCloneLeft = util.css( this._rollElementClone, "left" );
-			var distance = this._rollPixel;
-			var viewPortWidth = this._container.clientWidth;
-
-			if( rollElementLeft >= viewPortWidth ) {
-				this._rollElement.style.left = -this._rollElement.offsetWidth + rollElementCloneLeft + "px";
-			}
-
-			if( rollElementCloneLeft >= viewPortWidth ) {
-				this._rollElementClone.style.left = -this._rollElement.offsetWidth + util.css( this._rollElement, "left" ) + "px";
-			}
-			
-			rollElementLeft = util.css( this._rollElement, "left" );
-			rollElementCloneLeft = util.css( this._rollElementClone, "left" );
-
+			var left = this._container.scrollLeft;
 			var run = util.bind( function (progress) {
-				var stepDistance = parseInt( distance * progress, 10 );
-				this._rollElement.style.left = rollElementLeft + stepDistance + "px";
-				this._rollElementClone.style.left = rollElementCloneLeft + stepDistance + "px";
+				var scrollEnd = ( left - parseInt( progress * this._rollPixel , 10 ) ) % this._rollElement.offsetWidth;
+				this._container.scrollLeft = scrollEnd <= 0 ? scrollEnd + this._rollElement.offsetWidth : scrollEnd;
 			}, this);
 
 			animate( run, end, this._speed );
+		}
+	}
+
+	//获取当前滚动的位置
+	LoopRoll.prototype.getRollPosition = function() {
+		if( ["up", "down"].indexOf( this._direction ) != -1 ) {
+			return this._container.scrollTop;
+		}
+
+		if( ["left", "right"].indexOf(this._direction) != -1 ) {
+			return this._container.scrollLeft;
+		}
+	}
+
+	//获取滚动的类型，V表示垂直滚动，H表示水平滚动
+	LoopRoll.prototype.getRollType = function() {
+		if( ["up", "down"].indexOf( this._direction ) != -1 ) {
+			return "V";
+		}
+
+		if( ["left", "right"].indexOf(this._direction) != -1 ) {
+			return "H";
 		}
 	}
 
