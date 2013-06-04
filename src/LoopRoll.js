@@ -79,6 +79,9 @@
 		//间隔播放的时候判断是否要暂停播放的标志
 		this._isStopLoop = false;
 
+		//间隔播放的时候标志是处于滚动状态还是间隔状态，为true表示正在滚动
+		this._isRolling = false;
+
 		//轮播的时候最多只能滚动容器的宽度或者高度那么多像素
 		if( ["up", "down"].indexOf(this._direction) != -1 && this._delay != 0 ) {
 			this._rollPixel = this._rollPixel > this._container.clientHeight ? this._container.clientHeight : this._rollPixel;
@@ -111,12 +114,12 @@
 		this._container.appendChild( this._rollElementClone );
 
 		if( ["up", "down"].indexOf( this._direction ) != -1 ) {
-			this._rollElement.style.top = "0px";
+			//this._rollElement.style.top = "0px";
 			this._rollElementClone.style.top = this._rollElement.offsetHeight + "px";
 		}
 
 		if( ["left", "right"].indexOf(this._direction) != -1 ) {
-			this._rollElement.style.left = "0px";
+			//this._rollElement.style.left = "0px";
 			this._rollElementClone.style.left = this._rollElement.offsetWidth + "px";
 		}
 		
@@ -148,6 +151,7 @@
 				this._isStopLoop = true;
 				clearTimeout( this._timerId );
 			}
+			this._timerId = null;
 		}, this ) );
 
 		util.addEvent( this._container, "mouseout", util.bind( function() {
@@ -200,32 +204,37 @@
 		}
 	}
 
-	LoopRoll.prototype._rollPlay = function() {
+	LoopRoll.prototype._rollPlay = function( direction ) {
+		direction = direction || this._direction;
 		var end = util.bind( function() {
+			this._isRolling = false;
 			this._callback();
 			if( !this._isStopLoop ) {
 				this._timerId = setTimeout( util.bind( this._rollPlay, this ), this._delay );
 			}
 		}, this );
 
-		if( this._direction == "up" ) {
+		if( direction == "up" ) {
 			var top = this._container.scrollTop;
 			var run = util.bind( function (progress) {
+				this._isRolling = true;
 				this._container.scrollTop = ( top + parseInt( progress * this._rollPixel , 10 ) ) % this._rollElement.offsetHeight;
 			}, this);
 
 			animate( run, end, this._speed );
 		}
-		else if( this._direction == "down" ) {
+		else if( direction == "down" ) {
 			var top = this._container.scrollTop;
 			var run = util.bind( function (progress) {
+				this._isRolling = true;
 				var scrollEnd = ( top - parseInt( progress * this._rollPixel , 10 ) ) % this._rollElement.offsetHeight;
 				this._container.scrollTop = scrollEnd <= 0 ? scrollEnd + this._rollElement.offsetHeight : scrollEnd;
 			}, this);
 
 			animate( run, end, this._speed );
 		}
-		else if( this._direction == "left" ) {
+		else if( direction == "left" ) {
+			this._isRolling = true;
 			var left = this._container.scrollLeft;
 			var run = util.bind( function (progress) {
 				this._container.scrollLeft = ( left + parseInt( progress * this._rollPixel , 10 ) ) % this._rollElement.offsetWidth;
@@ -233,7 +242,8 @@
 
 			animate( run, end, this._speed );
 		}
-		else if( this._direction == "right" ) {
+		else if( direction == "right" ) {
+			this._isRolling = true;
 			var left = this._container.scrollLeft;
 			var run = util.bind( function (progress) {
 				var scrollEnd = ( left - parseInt( progress * this._rollPixel , 10 ) ) % this._rollElement.offsetWidth;
@@ -264,6 +274,44 @@
 		if( ["left", "right"].indexOf(this._direction) != -1 ) {
 			return "H";
 		}
+	}
+
+	LoopRoll.prototype.previous = function() {
+		var direction = "";
+		if( this._delay != 0 ) {
+			if( this.getRollType() == "V" ) {
+				direction = "down";
+			}
+			else {
+				direction = "right";
+			}
+
+			if( !this._isRolling ) {
+				clearTimeout( this._timerId );
+				this._timerId = null;
+				this._rollPlay( direction );
+			}
+		}
+		return this;
+	}
+
+	LoopRoll.prototype.next = function() {
+		var direction = "";
+		if( this._delay != 0 ) {
+			if( this.getRollType() == "V" ) {
+				direction = "up";
+			}
+			else {
+				direction = "left";
+			}
+
+			if( !this._isRolling ) {
+				clearTimeout( this._timerId );
+				this._timerId = null;
+				this._rollPlay( direction );
+			}		
+		}
+		return this;
 	}
 
 	var util = {

@@ -7,8 +7,8 @@
 <title>LoopRoll test</title>
 <style type="text/css">
 	*{margin: 0}
-	#container1 img {width: 260px; height: 300px;}
-	#container1 {overflow: hidden; position: relative;}
+	#container1 img {width: 260px; height:300px;}
+	#container1 {overflow: hidden; position: relative; width:850px; height:300px; margin-top:50px}
 	#rollElement1 {position: absolute; white-space: nowrap;}
 </style>
 </head>
@@ -33,7 +33,7 @@
 	</ul>
 </div>
 
-<div id="container1" class="name_list" style="width:850px; height:300px; margin-top:50px">
+<div id="container1" class="name_list">
 	<div id="rollElement1">
 		<img src="../img/1.jpg" />
 		<img src="../img/2.jpg" />
@@ -50,21 +50,21 @@
 <script type="text/javascript" src="http://static.daquan.xunlei.com/js/jquery-1.7.min.js"></script>
 <script type="text/javascript" src="LoopRoll.js"></script>
 <script type="text/javascript">
-	LoopRoll({
+	var loop = LoopRoll({
 		container: document.getElementById("container"),
 		rollElement: document.getElementById("rollElement"),
-		speed: 50,
-		rollPixel: 1,
-		delay: 0,
+		speed: 5000,
+		rollPixel: 0,
+		delay: 2000,
 		direction: "down",
 		callback: function(){}
 	});
 
 	
-	LoopRoll({
+	var lool = LoopRoll({
 		container: document.getElementById("container1"),
 		rollElement: document.getElementById("rollElement1"),
-		speed: 5000,
+		speed: 1000,
 		rollPixel: 0,
 		delay: 2000,
 		direction: "right",
